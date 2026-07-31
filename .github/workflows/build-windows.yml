@@ -34,6 +34,7 @@ jobs:
             cp -R "skynet/$dir" "$dir"
           done
           cp patches/service-console.lua service/console.lua
+          cp patches/mhcrypt.c lualib-src/mhcrypt.c
 
       - name: Build
         shell: msys2 {0}
