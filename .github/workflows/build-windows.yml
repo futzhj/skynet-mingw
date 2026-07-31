@@ -1,0 +1,78 @@
+name: Build Windows
+
+on:
+  push: {}
+  pull_request: {}
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install MinGW toolchain
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            base-devel
+            curl
+            tar
+            mingw-w64-x86_64-toolchain
+
+      - name: Prepare sources
+        shell: msys2 {0}
+        run: |
+          set -euxo pipefail
+          ./prepare.sh
+          for dir in 3rd examples lualib lualib-src service service-src skynet-src test; do
+            cp -R "skynet/$dir" "$dir"
+          done
+
+      - name: Build
+        shell: msys2 {0}
+        run: make -j2
+
+      - name: Verify build outputs
+        shell: msys2 {0}
+        run: |
+          set -euxo pipefail
+          test -f skynet.exe
+          test -f skynet.dll
+          test -f platform.dll
+          test -f lua55.dll
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $stage = Join-Path $env:RUNNER_TEMP 'skynet-mingw'
+          Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path $stage | Out-Null
+
+          $items = @(
+            'skynet.exe', 'skynet.dll', 'platform.dll', 'lua55.dll',
+            'autotest', 'cservice', 'examples', 'lualib', 'luaclib',
+            'service', 'test'
+          )
+          foreach ($item in $items) {
+            $source = Join-Path $env:GITHUB_WORKSPACE $item
+            if (Test-Path -LiteralPath $source) {
+              Copy-Item -LiteralPath $source -Destination $stage -Recurse -Force
+            }
+          }
+
+          Compress-Archive -Path (Join-Path $stage '*') `
+            -DestinationPath (Join-Path $env:GITHUB_WORKSPACE 'skynet-mingw.zip') `
+            -CompressionLevel Optimal -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: skynet-mingw
+          path: skynet-mingw.zip
