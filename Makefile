@@ -56,7 +56,7 @@ SKYNET_EXE_SRC = skynet_main.c
 SKYNET_SRC = skynet_handle.c skynet_module.c skynet_mq.c \
   skynet_server.c skynet_start.c skynet_timer.c skynet_error.c \
   skynet_harbor.c skynet_env.c skynet_monitor.c skynet_socket.c socket_server.c \
-  malloc_hook.c skynet_daemon.c skynet_log.c
+  mem_info.c malloc_hook.c skynet_daemon.c skynet_log.c
 
 all : \
 	$(LUA_STATICLIB) \
