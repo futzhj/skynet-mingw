@@ -36,7 +36,9 @@ jobs:
 
       - name: Build
         shell: msys2 {0}
-        run: make
+        run: |
+          make
+          cp "$(dirname "$(command -v gcc)")/libwinpthread-1.dll" .
 
       - name: Verify build outputs
         shell: msys2 {0}
@@ -46,6 +48,7 @@ jobs:
           test -f skynet.dll
           test -f platform.dll
           test -f lua55.dll
+          test -f libwinpthread-1.dll
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -75,6 +78,7 @@ jobs:
 
           $items = @(
             'skynet.exe', 'skynet.dll', 'platform.dll', 'lua55.dll',
+            'libwinpthread-1.dll',
             'dist/SkynetManager.exe',
             'autotest', 'cservice', 'examples', 'lualib', 'luaclib',
             'service', 'test'
