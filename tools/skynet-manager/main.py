@@ -49,6 +49,7 @@ class MainWindow(QMainWindow):
         self.started_at: float | None = None
         self.monitored_process: psutil.Process | None = None
         self._last_exit_code: int | None = None
+        self.stop_requested = False
 
         self._build_ui()
         self._restore_settings()
@@ -206,16 +207,18 @@ class MainWindow(QMainWindow):
 
         self._save_settings()
         self._last_exit_code = None
+        self.stop_requested = False
         self.started_at = time.monotonic()
         self.process.setWorkingDirectory(str(working_directory))
-        self.process.start(str(executable), [str(config_argument)])
         self._append_log(f"$ {executable} {config_argument}")
         self.status_label.setText("Starting")
         self._set_running_ui(True)
+        self.process.start(str(executable), [str(config_argument)])
 
     def stop_process(self) -> None:
         if self.process.state() == QProcess.ProcessState.NotRunning:
             return
+        self.stop_requested = True
         self._append_log("Stopping process...")
         self.process.terminate()
         if not self.process.waitForFinished(1500):
@@ -240,14 +243,22 @@ class MainWindow(QMainWindow):
             self._append_log(data.decode("utf-8", errors="replace"))
 
     def _process_finished(self, exit_code: int, _exit_status: QProcess.ExitStatus) -> None:
+        stopped_by_user = self.stop_requested
+        self.stop_requested = False
         self._last_exit_code = exit_code
         self.started_at = None
         self.monitored_process = None
-        self.status_label.setText(f"Exited ({exit_code})")
-        self._append_log(f"Process exited with code {exit_code}.")
+        if stopped_by_user:
+            self.status_label.setText("Stopped")
+            self._append_log("Process stopped.")
+        else:
+            self.status_label.setText(f"Exited ({exit_code})")
+            self._append_log(f"Process exited with code {exit_code}.")
         self._set_running_ui(False)
 
     def _process_error(self, error: QProcess.ProcessError) -> None:
+        if self.stop_requested and error == QProcess.ProcessError.Crashed:
+            return
         if error == QProcess.ProcessError.FailedToStart:
             self.started_at = None
             self.status_label.setText("Failed to start")
