@@ -140,8 +140,14 @@ class MainWindow(QMainWindow):
 
     def _restore_settings(self) -> None:
         root = runtime_root()
-        executable = self.settings.value("executable", str(root / "skynet.exe"), str)
-        config = self.settings.value("config", str(root / "examples" / "config"), str)
+        local_executable = root / "skynet.exe"
+        local_config = root / "examples" / "config"
+        if local_executable.is_file() and local_config.is_file():
+            executable = str(local_executable)
+            config = str(local_config)
+        else:
+            executable = self.settings.value("executable", str(local_executable), str)
+            config = self.settings.value("config", str(local_config), str)
         self.executable_edit.setText(executable)
         self.config_edit.setText(config)
 
