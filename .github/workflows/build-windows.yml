@@ -50,6 +50,26 @@ jobs:
           test -f lua55.dll
           test -f libwinpthread-1.dll
 
+      - name: Smoke test Skynet
+        shell: pwsh
+        run: |
+          $stdout = Join-Path $env:RUNNER_TEMP 'skynet.stdout.log'
+          $stderr = Join-Path $env:RUNNER_TEMP 'skynet.stderr.log'
+          $process = Start-Process -FilePath "$env:GITHUB_WORKSPACE\skynet.exe" `
+            -ArgumentList 'examples\config' `
+            -WorkingDirectory $env:GITHUB_WORKSPACE `
+            -RedirectStandardOutput $stdout `
+            -RedirectStandardError $stderr `
+            -WindowStyle Hidden -PassThru
+          Start-Sleep -Seconds 5
+          $process.Refresh()
+          if ($process.HasExited) {
+            Get-Content $stdout -ErrorAction SilentlyContinue
+            Get-Content $stderr -ErrorAction SilentlyContinue
+            throw "Skynet exited during startup with code $($process.ExitCode)."
+          }
+          Stop-Process -Id $process.Id
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

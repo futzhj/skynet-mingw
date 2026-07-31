@@ -178,8 +178,8 @@ class MainWindow(QMainWindow):
         if self.process.state() != QProcess.ProcessState.NotRunning:
             return
 
-        executable = Path(self.executable_edit.text().strip())
-        config = Path(self.config_edit.text().strip())
+        executable = Path(self.executable_edit.text().strip()).resolve()
+        config = Path(self.config_edit.text().strip()).resolve()
         if not executable.is_file():
             QMessageBox.critical(self, "Start failed", f"Executable not found:\n{executable}")
             return
@@ -187,12 +187,23 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Start failed", f"Config not found:\n{config}")
             return
 
+        working_directory = executable.parent
+        try:
+            config_argument = config.relative_to(working_directory)
+        except ValueError:
+            QMessageBox.critical(
+                self,
+                "Start failed",
+                "The config must be inside the Skynet runtime directory.",
+            )
+            return
+
         self._save_settings()
         self._last_exit_code = None
         self.started_at = time.monotonic()
-        self.process.setWorkingDirectory(str(executable.parent))
-        self.process.start(str(executable), [str(config)])
-        self._append_log(f"$ {executable} {config}")
+        self.process.setWorkingDirectory(str(working_directory))
+        self.process.start(str(executable), [str(config_argument)])
+        self._append_log(f"$ {executable} {config_argument}")
         self.status_label.setText("Starting")
         self._set_running_ui(True)
 

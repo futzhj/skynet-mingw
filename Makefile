@@ -24,7 +24,7 @@ COMPAT_CFLAGS := -idirafter 3rd/compat-mingw
 
 # link
 LDFLAGS := $(LUA_LIB) -lplatform -lpthread -lws2_32 -L$(SKYNET_BUILD_PATH)
-SHARED := --shared
+SHARED := --shared -Wl,--export-all-symbols
 EXPORT := -Wl,-E
 SHAREDLDFLAGS := $(LUA_LIB) -lskynet -lplatform -lws2_32 -L$(SKYNET_BUILD_PATH)
 
