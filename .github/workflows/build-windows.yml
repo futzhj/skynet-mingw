@@ -33,6 +33,7 @@ jobs:
           for dir in 3rd examples lualib lualib-src service service-src skynet-src test; do
             cp -R "skynet/$dir" "$dir"
           done
+          cp patches/service-console.lua service/console.lua
 
       - name: Build
         shell: msys2 {0}
@@ -61,14 +62,36 @@ jobs:
             -RedirectStandardOutput $stdout `
             -RedirectStandardError $stderr `
             -WindowStyle Hidden -PassThru
-          Start-Sleep -Seconds 5
-          $process.Refresh()
-          if ($process.HasExited) {
-            Get-Content $stdout -ErrorAction SilentlyContinue
-            Get-Content $stderr -ErrorAction SilentlyContinue
-            throw "Skynet exited during startup with code $($process.ExitCode)."
+          try {
+            Start-Sleep -Seconds 5
+            $process.Refresh()
+            $log = (Get-Content $stdout -Raw -ErrorAction SilentlyContinue) +
+              (Get-Content $stderr -Raw -ErrorAction SilentlyContinue)
+            if ($process.HasExited) {
+              Write-Output $log
+              throw "Skynet exited during startup with code $($process.ExitCode)."
+            }
+            if ($log -match 'assertion failed|lua call .* error') {
+              Write-Output $log
+              throw 'Skynet emitted a Lua service error during startup.'
+            }
+            foreach ($marker in @(
+              'master listen socket 0.0.0.0:2013',
+              'Start debug console at 127.0.0.1:8000',
+              'Watchdog listen on 0.0.0.0:8888'
+            )) {
+              if ($log -notmatch [regex]::Escape($marker)) {
+                Write-Output $log
+                throw "Missing startup marker: $marker"
+              }
+            }
           }
-          Stop-Process -Id $process.Id
+          finally {
+            $process.Refresh()
+            if (-not $process.HasExited) {
+              Stop-Process -Id $process.Id -Force
+            }
+          }
 
       - name: Set up Python
         uses: actions/setup-python@v5
