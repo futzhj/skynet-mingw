@@ -10,6 +10,9 @@
 #define HAVE_STRUCT_TIMESPEC
 
 /*<signal.h>*/
+#ifdef __MINGW32__
+typedef int sigset_t;
+#endif
 #define SIGHUP 1
 #define SA_RESTART 0x0002
 struct sigaction {
@@ -28,7 +31,15 @@ char *strsep(char **stringp, const char *delim);
 
 struct tm *localtime_r(const time_t *timer, struct tm *buf);
 
-enum { CLOCK_THREAD_CPUTIME_ID, CLOCK_REALTIME, CLOCK_MONOTONIC };
+#ifndef CLOCK_THREAD_CPUTIME_ID
+#define CLOCK_THREAD_CPUTIME_ID 0
+#endif
+#ifndef CLOCK_REALTIME
+#define CLOCK_REALTIME 1
+#endif
+#ifndef CLOCK_MONOTONIC
+#define CLOCK_MONOTONIC 2
+#endif
 #define clock_gettime clock_gettime_platform
 int clock_gettime_platform(int what, struct timespec *ti);
 

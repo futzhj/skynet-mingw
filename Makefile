@@ -10,7 +10,7 @@ SKYNET_BUILD_PATH ?= .
 # lua
 LUA_STATICLIB := 3rd/lua/liblua.a
 LUA_LIB ?= $(LUA_STATICLIB)
-LUA_INC ?= 3rd/lua/src
+LUA_INC ?= 3rd/lua
 
 PLATFORM_INC ?= platform
 
@@ -22,10 +22,10 @@ CFLAGS := -g -O2 -Wall -I$(PLATFORM_INC) -I$(LUA_INC) $(MYCFLAGS)
 # CFLAGS += -DUSE_PTHREAD_LOCK
 
 # link
-LDFLAGS := -llua55 -lplatform -lpthread -lws2_32 -L$(SKYNET_BUILD_PATH)
+LDFLAGS := $(LUA_LIB) -lplatform -lpthread -lws2_32 -L$(SKYNET_BUILD_PATH)
 SHARED := --shared
 EXPORT := -Wl,-E
-SHAREDLDFLAGS := -llua55 -lskynet -lplatform -lws2_32 -L$(SKYNET_BUILD_PATH)
+SHAREDLDFLAGS := $(LUA_LIB) -lskynet -lplatform -lws2_32 -L$(SKYNET_BUILD_PATH)
 
 # skynet
 
@@ -66,10 +66,10 @@ all : \
 	$(foreach v, $(LUA_CLIB), $(LUA_CLIB_PATH)/$(v).so)
 
 $(SKYNET_BUILD_PATH)/platform.dll : platform/platform.c platform/epoll.c platform/socket_poll.c platform/socket_extend.c
-	$(CC) $(CFLAGS) $(SHARED) $^ -lws2_32 -lwsock32 -o $@ -DDONOT_USE_IO_EXTEND -DFD_SETSIZE=1024
+	$(CC) $(CFLAGS) $(SHARED) $^ -lws2_32 -lwsock32 -Wl,--out-implib,$(SKYNET_BUILD_PATH)/libplatform.a -o $@ -DDONOT_USE_IO_EXTEND -DFD_SETSIZE=1024
 
 $(SKYNET_BUILD_PATH)/skynet.dll : $(foreach v, $(SKYNET_SRC), skynet-src/$(v)) | $(LUA_LIB) $(SKYNET_BUILD_PATH)/platform.dll
-	$(CC) -includeplatform.h $(CFLAGS) $(SHARED) -o $@ $^ -Iskynet-src $(LDFLAGS) $(SKYNET_LIBS) $(SKYNET_DEFINES)
+	$(CC) -includeplatform.h $(CFLAGS) $(SHARED) -o $@ $^ -Iskynet-src -Wl,--out-implib,$(SKYNET_BUILD_PATH)/libskynet.a $(LDFLAGS) $(SKYNET_LIBS) $(SKYNET_DEFINES)
 
 $(SKYNET_BUILD_PATH)/skynet.exe : $(foreach v, $(SKYNET_EXE_SRC), skynet-src/$(v))  | $(SKYNET_BUILD_PATH)/skynet.dll
 	$(CC) -includeplatform.h $(CFLAGS) -o $@ $^ -Iskynet-src $(EXPORT) $(LDFLAGS) $(SHAREDLDFLAGS) $(SKYNET_DEFINES)	
@@ -113,7 +113,7 @@ $(LUA_CLIB_PATH)/lpeg.so : 3rd/lpeg/lpcap.c 3rd/lpeg/lpcode.c 3rd/lpeg/lpprint.c
 	$(CC) $(CFLAGS) $(SHARED) -I3rd/lpeg $^ -o $@  $(SHAREDLDFLAGS) 
 
 clean :
-	rm -f $(SKYNET_BUILD_PATH)/skynet.exe $(SKYNET_BUILD_PATH)/skynet.dll $(SKYNET_BUILD_PATH)/platform.dll $(CSERVICE_PATH)/*.so $(LUA_CLIB_PATH)/*.so
+	rm -f $(SKYNET_BUILD_PATH)/skynet.exe $(SKYNET_BUILD_PATH)/skynet.dll $(SKYNET_BUILD_PATH)/platform.dll $(SKYNET_BUILD_PATH)/libskynet.a $(SKYNET_BUILD_PATH)/libplatform.a $(CSERVICE_PATH)/*.so $(LUA_CLIB_PATH)/*.so
 
 cleanall: clean
 	cd 3rd/lua && $(MAKE) clean
