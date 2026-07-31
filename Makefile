@@ -18,7 +18,7 @@ PLATFORM_INC ?= platform
 TLS_LIB=
 TLS_INC=
 
-CFLAGS := -g -O2 -Wall -I$(PLATFORM_INC) -I$(LUA_INC) $(MYCFLAGS)
+CFLAGS := -g -O2 -Wall -I$(PLATFORM_INC) -I$(LUA_INC) -I3rd/compat-mingw $(MYCFLAGS)
 # CFLAGS += -DUSE_PTHREAD_LOCK
 
 # link
@@ -68,7 +68,7 @@ all : \
 $(SKYNET_BUILD_PATH)/platform.dll : platform/platform.c platform/epoll.c platform/socket_poll.c platform/socket_extend.c
 	$(CC) $(CFLAGS) $(SHARED) $^ -lws2_32 -lwsock32 -Wl,--out-implib,$(SKYNET_BUILD_PATH)/libplatform.a -o $@ -DDONOT_USE_IO_EXTEND -DFD_SETSIZE=1024
 
-$(SKYNET_BUILD_PATH)/skynet.dll : $(foreach v, $(SKYNET_SRC), skynet-src/$(v)) | $(LUA_LIB) $(SKYNET_BUILD_PATH)/platform.dll
+$(SKYNET_BUILD_PATH)/skynet.dll : $(foreach v, $(SKYNET_SRC), skynet-src/$(v)) 3rd/compat-mingw/dlfcn.c | $(LUA_LIB) $(SKYNET_BUILD_PATH)/platform.dll
 	$(CC) -includeplatform.h $(CFLAGS) $(SHARED) -o $@ $^ -Iskynet-src -Wl,--out-implib,$(SKYNET_BUILD_PATH)/libskynet.a $(LDFLAGS) $(SKYNET_LIBS) $(SKYNET_DEFINES)
 
 $(SKYNET_BUILD_PATH)/skynet.exe : $(foreach v, $(SKYNET_EXE_SRC), skynet-src/$(v))  | $(SKYNET_BUILD_PATH)/skynet.dll
