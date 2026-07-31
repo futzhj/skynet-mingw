@@ -10,3 +10,8 @@ service/
 service-src/
 skynet-src/
 test/
+
+# PyInstaller output
+/build/
+/dist/
+/SkynetManager.spec

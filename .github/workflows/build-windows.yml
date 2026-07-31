@@ -47,6 +47,24 @@ jobs:
           test -f platform.dll
           test -f lua55.dll
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/skynet-manager/requirements.txt
+
+      - name: Build GUI manager
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r tools/skynet-manager/requirements.txt
+          python -m PyInstaller --noconfirm --clean --onefile --windowed `
+            --name SkynetManager tools/skynet-manager/main.py
+          if (-not (Test-Path -LiteralPath dist/SkynetManager.exe)) {
+            throw 'SkynetManager.exe was not created.'
+          }
+
       - name: Package
         shell: pwsh
         run: |
@@ -57,6 +75,7 @@ jobs:
 
           $items = @(
             'skynet.exe', 'skynet.dll', 'platform.dll', 'lua55.dll',
+            'dist/SkynetManager.exe',
             'autotest', 'cservice', 'examples', 'lualib', 'luaclib',
             'service', 'test'
           )
