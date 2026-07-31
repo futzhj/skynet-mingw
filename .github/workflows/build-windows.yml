@@ -49,6 +49,7 @@ jobs:
           test -f skynet.exe
           test -f skynet.dll
           test -f platform.dll
+          test -f lua.exe
           test -f lua55.dll
           test -f libwinpthread-1.dll
 
@@ -121,7 +122,7 @@ jobs:
           New-Item -ItemType Directory -Path $stage | Out-Null
 
           $items = @(
-            'skynet.exe', 'skynet.dll', 'platform.dll', 'lua55.dll',
+            'skynet.exe', 'skynet.dll', 'platform.dll', 'lua.exe', 'lua55.dll',
             'libwinpthread-1.dll',
             'dist/SkynetManager.exe',
             'autotest', 'cservice', 'examples', 'lualib', 'luaclib',
