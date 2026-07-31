@@ -70,7 +70,7 @@ $(SKYNET_BUILD_PATH)/platform.dll : platform/platform.c platform/epoll.c platfor
 	$(CC) $(CFLAGS) $(SHARED) $^ -lws2_32 -lwsock32 -Wl,--out-implib,$(SKYNET_BUILD_PATH)/libplatform.a -o $@ -DDONOT_USE_IO_EXTEND -DFD_SETSIZE=1024
 
 $(SKYNET_BUILD_PATH)/skynet.dll : $(foreach v, $(SKYNET_SRC), skynet-src/$(v)) 3rd/compat-mingw/dlfcn.c | $(LUA_LIB) $(SKYNET_BUILD_PATH)/platform.dll
-	$(CC) -includeplatform.h $(CFLAGS) $(COMPAT_CFLAGS) $(SHARED) -o $@ $^ -Iskynet-src -Wl,--out-implib,$(SKYNET_BUILD_PATH)/libskynet.a $(LDFLAGS) $(SKYNET_LIBS) $(SKYNET_DEFINES)
+	$(CC) -includeplatform.h $(CFLAGS) $(COMPAT_CFLAGS) $(SHARED) -o $@ $^ -Iskynet-src -Wl,--export-all-symbols,--out-implib,$(SKYNET_BUILD_PATH)/libskynet.a $(LDFLAGS) $(SKYNET_LIBS) $(SKYNET_DEFINES)
 
 $(SKYNET_BUILD_PATH)/skynet.exe : $(foreach v, $(SKYNET_EXE_SRC), skynet-src/$(v))  | $(SKYNET_BUILD_PATH)/skynet.dll
 	$(CC) -includeplatform.h $(CFLAGS) -o $@ $^ -Iskynet-src $(EXPORT) $(LDFLAGS) $(SHAREDLDFLAGS) $(SKYNET_DEFINES)	
