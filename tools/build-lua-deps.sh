@@ -54,7 +54,7 @@ fetch_lsqlite3() {
     'https://lua.sqlite.org/home/zip/lsqlite3_v096.zip?uuid=v0.9.6' \
     -o "${archive}"
   printf '%s  %s\n' "${checksum}" "${archive}" | sha256sum -c -
-  tar -xf "${archive}" -C "${dest}"
+  unzip -q "${archive}" -d "${dest}"
   printf '%s\n' 'v0.9.6' > "${marker}"
   rm -f "${archive}"
 }

@@ -23,6 +23,7 @@ jobs:
             base-devel
             curl
             tar
+            unzip
             mingw-w64-x86_64-toolchain
             mingw-w64-x86_64-zlib
             mingw-w64-x86_64-lz4
