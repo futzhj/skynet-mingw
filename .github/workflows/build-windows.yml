@@ -70,8 +70,8 @@ jobs:
         shell: msys2 {0}
         run: |
           set -euxo pipefail
-          LUA_PATH="$PWD/lualib/?.lua;$PWD/lualib/?/init.lua;;" \
-          LUA_CPATH="$PWD/luaclib/?.so;;" \
+          LUA_PATH="./lualib/?.lua;./lualib/?/init.lua;;" \
+          LUA_CPATH="./luaclib/?.so;;" \
             ./lua.exe tools/lua-deps-smoke.lua
 
       - name: Smoke test Skynet
