@@ -82,7 +82,7 @@ $(SKYNET_BUILD_PATH)/skynet.exe : $(foreach v, $(SKYNET_EXE_SRC), skynet-src/$(v
 $(LUA_STATICLIB) :
 	cd 3rd/lua && $(MAKE) CC='$(CC)' $(PLAT) && cd - && cp -f $(LUA_INC)/lua55.dll $(SKYNET_BUILD_PATH)/lua55.dll && cp -f $(LUA_INC)/lua.exe $(SKYNET_BUILD_PATH)/lua.exe
 
-$(THIRDPARTY_STAMP) : $(LUA_STATICLIB) tools/build-lua-deps.sh patches/lua-rocksdb-modern.patch
+$(THIRDPARTY_STAMP) : $(LUA_STATICLIB) tools/build-lua-deps.sh patches/lua-rocksdb-modern.patch patches/lua-openssl-windows-time.patch
 	LUA_CLIB_PATH='$(LUA_CLIB_PATH)' bash tools/build-lua-deps.sh
 	touch $@
 

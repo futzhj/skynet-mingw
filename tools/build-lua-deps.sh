@@ -98,6 +98,8 @@ fetch_repo "${DEPS_DIR}/lua-leveldb" \
 fetch_lsqlite3
 apply_source_patch "${DEPS_DIR}/lua-rocksdb" \
   "${ROOT}/patches/lua-rocksdb-modern.patch"
+apply_source_patch "${DEPS_DIR}/lua-openssl" \
+  "${ROOT}/patches/lua-openssl-windows-time.patch"
 
 COMMON_CFLAGS=(-std=gnu99 -O2 -Wall -fPIC -DLUA_COMPAT_APIINTCASTS -I"${LUA_INC}")
 SHARED_FLAGS=(-shared -Wl,--export-all-symbols)

@@ -1,0 +1,18 @@
+diff --git a/src/ots.c b/src/ots.c
+index 3b39dd1..6b4602f 100644
+--- a/src/ots.c
++++ b/src/ots.c
+@@ -1510,3 +1510,3 @@ static int
+-openssl_time_cb(TS_RESP_CTX *ctx, void *data, time_t *sec, long *usec)
++openssl_time_cb(TS_RESP_CTX *ctx, void *data, long *sec, long *usec)
+ {
+   int        err;
+@@ -1527,7 +1527,7 @@ openssl_time_cb(TS_RESP_CTX *ctx, void *data, time_t *sec, long *usec)
+   err = lua_pcall(L, 1, 2, 0);
+   if (err == 0) {
+     if (lua_isnumber(L, -2)) {
+-      *sec = (time_t)luaL_checkinteger(L, -2);
++      *sec = (long)luaL_checkinteger(L, -2);
+       *usec = (long)luaL_optinteger(L, -1, 0);
+       lua_pop(L, 2); /* remove callback returned value */
+       return 1;
