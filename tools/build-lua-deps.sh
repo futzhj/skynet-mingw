@@ -109,6 +109,7 @@ build_c_module() {
 build_c_module lfs "${DEPS_DIR}/luafilesystem/src/lfs.c" --
 build_c_module zlib "${DEPS_DIR}/lua-zlib/lua_zlib.c" -- -lz
 build_c_module lz4 \
+  -include string.h \
   "${DEPS_DIR}/lua-lz4/lua_lz4.c" \
   "${DEPS_DIR}/lua-lz4/lz4/lz4.c" \
   "${DEPS_DIR}/lua-lz4/lz4/lz4hc.c" \
