@@ -37,6 +37,20 @@ fetch_repo() {
   printf '%s\n' "${ref}" > "${marker}"
 }
 
+apply_source_patch() {
+  local dest="$1"
+  local patch_file="$2"
+
+  if patch --batch --forward --dry-run -s -p1 -d "${dest}" < "${patch_file}"; then
+    patch --batch --forward -s -p1 -d "${dest}" < "${patch_file}"
+  elif patch --batch --reverse --dry-run -s -p1 -d "${dest}" < "${patch_file}"; then
+    return
+  else
+    printf 'Patch does not apply: %s\n' "${patch_file}" >&2
+    return 1
+  fi
+}
+
 fetch_lsqlite3() {
   local dest="${DEPS_DIR}/lsqlite3"
   local marker="${dest}/.source-ref"
@@ -82,6 +96,8 @@ fetch_repo "${DEPS_DIR}/lua-rocksdb" \
 fetch_repo "${DEPS_DIR}/lua-leveldb" \
   marcopompili/lua-leveldb 81255fd83b50a297b02fba164afe9c4f5ccf3749
 fetch_lsqlite3
+apply_source_patch "${DEPS_DIR}/lua-rocksdb" \
+  "${ROOT}/patches/lua-rocksdb-modern.patch"
 
 COMMON_CFLAGS=(-std=gnu99 -O2 -Wall -fPIC -DLUA_COMPAT_APIINTCASTS -I"${LUA_INC}")
 SHARED_FLAGS=(-shared -Wl,--export-all-symbols)
