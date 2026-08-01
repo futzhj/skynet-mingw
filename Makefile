@@ -7,6 +7,8 @@ PLAT ?= mingw
 
 SKYNET_BUILD_PATH ?= .
 
+THIRDPARTY_STAMP := .build/lua-deps.stamp
+
 # lua
 LUA_STATICLIB := 3rd/lua/liblua.a
 LUA_LIB ?= $(LUA_STATICLIB)
@@ -62,9 +64,10 @@ all : \
 	$(LUA_STATICLIB) \
    	$(SKYNET_BUILD_PATH)/platform.dll \
   	$(SKYNET_BUILD_PATH)/skynet.dll \
-  	$(SKYNET_BUILD_PATH)/skynet.exe \
+	$(SKYNET_BUILD_PATH)/skynet.exe \
 	$(foreach v, $(CSERVICE), $(CSERVICE_PATH)/$(v).so) \
-	$(foreach v, $(LUA_CLIB), $(LUA_CLIB_PATH)/$(v).so)
+	$(foreach v, $(LUA_CLIB), $(LUA_CLIB_PATH)/$(v).so) \
+	$(THIRDPARTY_STAMP)
 
 $(SKYNET_BUILD_PATH)/platform.dll : platform/platform.c platform/epoll.c platform/socket_poll.c platform/socket_extend.c
 	$(CC) $(CFLAGS) $(SHARED) $^ -lws2_32 -lwsock32 -Wl,--out-implib,$(SKYNET_BUILD_PATH)/libplatform.a -o $@ -DDONOT_USE_IO_EXTEND -DFD_SETSIZE=1024
@@ -78,6 +81,12 @@ $(SKYNET_BUILD_PATH)/skynet.exe : $(foreach v, $(SKYNET_EXE_SRC), skynet-src/$(v
 # lua
 $(LUA_STATICLIB) :
 	cd 3rd/lua && $(MAKE) CC='$(CC)' $(PLAT) && cd - && cp -f $(LUA_INC)/lua55.dll $(SKYNET_BUILD_PATH)/lua55.dll && cp -f $(LUA_INC)/lua.exe $(SKYNET_BUILD_PATH)/lua.exe
+
+$(THIRDPARTY_STAMP) : $(LUA_STATICLIB) tools/build-lua-deps.sh
+	LUA_CLIB_PATH='$(LUA_CLIB_PATH)' bash tools/build-lua-deps.sh
+	touch $@
+
+thirdparty : $(THIRDPARTY_STAMP)
 
 $(LUA_CLIB_PATH) :
 	mkdir $(LUA_CLIB_PATH)
@@ -117,9 +126,12 @@ $(LUA_CLIB_PATH)/lpeg.so : 3rd/lpeg/lpcap.c 3rd/lpeg/lpcode.c 3rd/lpeg/lpprint.c
 	$(CC) $(CFLAGS) $(SHARED) -I3rd/lpeg $^ -o $@  $(SHAREDLDFLAGS) 
 
 clean :
-	rm -f $(SKYNET_BUILD_PATH)/skynet.exe $(SKYNET_BUILD_PATH)/skynet.dll $(SKYNET_BUILD_PATH)/platform.dll $(SKYNET_BUILD_PATH)/lua.exe $(SKYNET_BUILD_PATH)/libskynet.a $(SKYNET_BUILD_PATH)/libplatform.a $(CSERVICE_PATH)/*.so $(LUA_CLIB_PATH)/*.so
+	rm -f $(SKYNET_BUILD_PATH)/skynet.exe $(SKYNET_BUILD_PATH)/skynet.dll $(SKYNET_BUILD_PATH)/platform.dll $(SKYNET_BUILD_PATH)/lua.exe $(SKYNET_BUILD_PATH)/lua55.dll $(SKYNET_BUILD_PATH)/libskynet.a $(SKYNET_BUILD_PATH)/libplatform.a $(CSERVICE_PATH)/*.so $(LUA_CLIB_PATH)/*.so $(THIRDPARTY_STAMP)
 
 cleanall: clean
 	cd 3rd/lua && $(MAKE) clean
 	rm -f $(LUA_STATICLIB)
+	rm -rf .build
+
+.PHONY: thirdparty
 

@@ -24,6 +24,14 @@ jobs:
             curl
             tar
             mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-zlib
+            mingw-w64-x86_64-lz4
+            mingw-w64-x86_64-openssl
+            mingw-w64-x86_64-libiconv
+            mingw-w64-x86_64-sqlite3
+            mingw-w64-x86_64-rocksdb
+            mingw-w64-x86_64-leveldb
+            mingw-w64-x86_64-snappy
 
       - name: Prepare sources
         shell: msys2 {0}
@@ -39,8 +47,9 @@ jobs:
       - name: Build
         shell: msys2 {0}
         run: |
+          set -euxo pipefail
           make
-          cp "$(dirname "$(command -v gcc)")/libwinpthread-1.dll" .
+          bash tools/collect-mingw-runtime.sh
 
       - name: Verify build outputs
         shell: msys2 {0}
@@ -52,6 +61,17 @@ jobs:
           test -f lua.exe
           test -f lua55.dll
           test -f libwinpthread-1.dll
+          for module in lfs zlib lz4 lpeg cmsgpack cjson sproto openssl iconv lsqlite3 rocksdb lualeveldb; do
+            test -f "luaclib/$module.so"
+          done
+
+      - name: Smoke test Lua modules
+        shell: msys2 {0}
+        run: |
+          set -euxo pipefail
+          LUA_PATH="$PWD/lualib/?.lua;$PWD/lualib/?/init.lua;;" \
+          LUA_CPATH="$PWD/luaclib/?.so;;" \
+            ./lua.exe tools/lua-deps-smoke.lua
 
       - name: Smoke test Skynet
         shell: pwsh
@@ -134,6 +154,8 @@ jobs:
               Copy-Item -LiteralPath $source -Destination $stage -Recurse -Force
             }
           }
+          Get-ChildItem -LiteralPath $env:GITHUB_WORKSPACE -Filter '*.dll' -File |
+            Copy-Item -Destination $stage -Force
 
           Compress-Archive -Path (Join-Path $stage '*') `
             -DestinationPath (Join-Path $env:GITHUB_WORKSPACE 'skynet-mingw.zip') `

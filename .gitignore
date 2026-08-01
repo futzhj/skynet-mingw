@@ -15,3 +15,7 @@ test/
 /build/
 /dist/
 /SkynetManager.spec
+
+# Local dependency cache and downloaded CI artifacts
+/.build/
+/artifacts/
